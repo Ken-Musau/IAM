@@ -18,12 +18,10 @@ class User(db.Model, SerializerMixin):
 
     @hybrid_property
     def password_hash(self):
-        # return self._password_hash
-        raise Exception('Password hashes may not be viewed.')
+        return self._password_hash
 
     @password_hash.setter
     def password_hash(self, password):
-        # utf-8 encoding and decoding is required in python 3
         password_hash = bcrypt.generate_password_hash(
             password.encode('utf-8'))
         self._password_hash = password_hash.decode('utf-8')
@@ -31,6 +29,9 @@ class User(db.Model, SerializerMixin):
     def authenticate(self, password):
         return bcrypt.check_password_hash(
             self._password_hash, password.encode('utf-8'))
+
+    def __repr__(self):
+        return f'User {self.username}, ID: {self.id}'
 
 
 class Recipe(db.Model, SerializerMixin):
