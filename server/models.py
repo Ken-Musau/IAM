@@ -14,7 +14,7 @@ class User(db.Model, SerializerMixin):
     image_url = db.Column(db.String)
     bio = db.Column(db.String)
 
-    receipts = db.relationship("Recipe", back_populates="users")
+    recipes = db.relationship("Recipe", back_populates="user")
 
     @hybrid_property
     def password_hash(self):
@@ -42,6 +42,8 @@ class Recipe(db.Model, SerializerMixin):
     minutes_to_complete = db.Column(db.Integer)
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+
+    user = db.relationship("User", back_populates="recipes")
 
     @validates('instructions')
     def validate_instructions(self, key, instructions):
