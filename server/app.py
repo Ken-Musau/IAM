@@ -8,7 +8,12 @@ from config import app, db, api
 from models import User, Recipe
 
 
-class userById(Resource):
+class Home(Resource):
+    def get(self):
+        return make_response("<h1>Welcome to IAM</h2>")
+
+
+class UserById(Resource):
     def delete(self, id):
         user = User.query.filter_by(id=id).first()
         db.session.delete(user)
@@ -33,7 +38,12 @@ class Signup(Resource):
 
 
 class CheckSession(Resource):
-    pass
+    def get(self):
+        user = User.query.filter(User.id == session.get("user_id")).first()
+
+        if user:
+            return user.to_dict(), 200
+        return make_response(["Log in"])
 
 
 class Login(Resource):
@@ -50,20 +60,27 @@ class Login(Resource):
 
 
 class Logout(Resource):
-    pass
+    def delete(self):
+        session["user_id"] = None
+
+        return make_response(["Successfully logged out"], 200)
 
 
 class RecipeIndex(Resource):
-    pass
+    def get(self):
+        recipes = [recipe.to_dict() for recipe in Recipe.query.all()]
+
+        return recipes, 200
 
 
+api.add_resource(Home, "/")
 api.add_resource(Signup, '/signup', endpoint='signup')
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
 api.add_resource(Login, '/login', endpoint='login')
 api.add_resource(Logout, '/logout', endpoint='logout')
 api.add_resource(RecipeIndex, '/recipes', endpoint='recipes')
 
-api.add_resource(userById, "/users/<int:id>")
+api.add_resource(UserById, "/users/<int:id>")
 
 
 if __name__ == '__main__':
