@@ -13,6 +13,12 @@ class Home(Resource):
         return make_response("<h1>Welcome to IAM</h2>")
 
 
+class Users(Resource):
+    def get(self):
+        users = [user.to_dict() for user in User.query.all()]
+        return make_response(users, 200)
+
+
 class UserById(Resource):
     def delete(self, id):
         user = User.query.filter_by(id=id).first()
@@ -21,6 +27,8 @@ class UserById(Resource):
 
         return make_response({"message": "User deleted"}, 200)
 
+
+# Authentication
 
 class Signup(Resource):
     def post(self):
@@ -81,6 +89,7 @@ api.add_resource(Logout, '/logout', endpoint='logout')
 api.add_resource(RecipeIndex, '/recipes', endpoint='recipes')
 
 api.add_resource(UserById, "/users/<int:id>")
+api.add_resource(Users, "/users")
 
 
 if __name__ == '__main__':

@@ -1,8 +1,8 @@
 """create user and recipe
 
-Revision ID: f15ee336ce6a
+Revision ID: d7fad2a8916d
 Revises: 
-Create Date: 2024-02-28 22:29:24.175319
+Create Date: 2024-03-02 10:20:40.609454
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'f15ee336ce6a'
+revision = 'd7fad2a8916d'
 down_revision = None
 branch_labels = None
 depends_on = None
