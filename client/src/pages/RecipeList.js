@@ -23,7 +23,7 @@ function RecipeList() {
               <p>
                 <em>Time to Complete: {recipe.minutes_to_complete} minutes</em>
                 &nbsp;·&nbsp;
-                <cite>By {recipe.user.username}</cite>
+                <cite>By {recipe.user?.username}</cite>
               </p>
               <ReactMarkdown>{recipe.instructions}</ReactMarkdown>
             </Box>
