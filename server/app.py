@@ -131,28 +131,27 @@ class Logout(Resource):
 
 class RecipeIndex(Resource):
     def get(self):
-        user = User.query.filter(User.id == session["user_id"]).first()
-        recipes = [recipe.to_dict() for recipe in user.recipes]
-
-        return recipes, 200
+        user = User.query.filter(User.id == session['user_id']).first()
+        return [recipe.to_dict() for recipe in user.recipes], 200
 
     def post(self):
         json = request.get_json()
-        new_recipe = Recipe(
-            title=json["title"],
-            instructions=json["instructions"],
-            minutes_to_complete=json["minutes_to_complete"],
-            user_id=session["user_id"]
-        )
 
         try:
+
+            new_recipe = Recipe(
+                title=json["title"],
+                instructions=json["instructions"],
+                minutes_to_complete=json["minutes_to_complete"],
+                user_id=session["user_id"]
+            )
             db.session.add(new_recipe)
             db.session.commit()
 
-            return new_recipe.to_dict(), 200
+            return new_recipe.to_dict(), 201
 
         except IntegrityError:
-
+            db.session.rollback()
             return {'error': '422 Unprocessable Entity'}, 422
 
 

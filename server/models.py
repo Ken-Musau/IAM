@@ -1,6 +1,6 @@
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_serializer import SerializerMixin
-from sqlalchemy.orm import validates
+# from sqlalchemy.orm import validates
 
 from config import db, bcrypt
 
@@ -8,7 +8,7 @@ from config import db, bcrypt
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
 
-    serialize_rules = ("-recipes.user",)
+    serialize_rules = ('-recipes.user', '-_password_hash',)
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True, nullable=False)
@@ -16,11 +16,12 @@ class User(db.Model, SerializerMixin):
     image_url = db.Column(db.String)
     bio = db.Column(db.String)
 
-    recipes = db.relationship("Recipe", back_populates="user")
+    # recipes = db.relationship("Recipe", back_populates="user")
+    recipes = db.relationship('Recipe', backref='user')
 
     @hybrid_property
     def password_hash(self):
-        return self._password_hash
+        raise AttributeError('Password hashes may not be viewed.')
 
     @password_hash.setter
     def password_hash(self, password):
@@ -38,6 +39,9 @@ class User(db.Model, SerializerMixin):
 
 class Recipe(db.Model, SerializerMixin):
     __tablename__ = 'recipes'
+    __table_args__ = (
+        db.CheckConstraint('length(instructions) >= 50'),
+    )
 
     serialize_rules = ("-user.recipes",)
 
@@ -48,11 +52,13 @@ class Recipe(db.Model, SerializerMixin):
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
 
-    user = db.relationship("User", back_populates="recipes")
+    # user = db.relationship("User", back_populates="recipes")
 
-    @validates('instructions')
-    def validate_instructions(self, key, instructions):
-        if len(instructions) < 50:
-            raise ValueError(
-                "Instructions should be  at least 50 characters long.")
-        return instructions
+    # @validates('instructions')
+    # def validate_instructions(self, key, instructions):
+    #     if len(instructions) < 50:
+    #         raise ValueError(
+    #             "Instructions should be  at least 50 characters long.")
+    #     return instructions
+    def __repr__(self):
+        return f'<Recipe {self.id}: {self.title}>'
