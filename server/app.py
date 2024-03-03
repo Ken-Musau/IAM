@@ -40,19 +40,59 @@ class UserById(Resource):
 
 # Authentication
 
-class Signup(Resource):
-    def post(self):
-        json = request.get_json()
-        user = User(
-            username=json["username"],
-            password_hash=json["password"],
-            image_url=json["image_url"],
-            bio=json["bio"]
-        )
-        db.session.add(user)
-        db.session.commit()
+# class Signup(Resource):
+#     def post(self):
+#         json = request.get_json()
+#         user = User(
+#             username=json.get("username"),
+#             password_hash=json.get("password"),
+#             image_url=json.get("image_url"),
+#             bio=json.get("bio")
+#         )
 
-        return make_response(jsonify(user.to_dict()), 200)
+#         try:
+#             db.session.add(user)
+#             db.session.commit()
+
+#             session['user_id'] = user.id
+#             return make_response(jsonify(user.to_dict()), 200)
+
+#         except IntegrityError:
+
+#             return {'error': '422 Unprocessable Entity'}, 422
+
+class Signup(Resource):
+
+    def post(self):
+
+        request_json = request.get_json()
+
+        username = request_json.get('username')
+        password = request_json.get('password')
+        image_url = request_json.get('image_url')
+        bio = request_json.get('bio')
+
+        user = User(
+            username=username,
+            image_url=image_url,
+            bio=bio
+        )
+
+        # the setter will encrypt this
+        user.password_hash = password
+
+        try:
+
+            db.session.add(user)
+            db.session.commit()
+
+            session['user_id'] = user.id
+
+            return user.to_dict(), 201
+
+        except IntegrityError:
+
+            return {'error': '422 Unprocessable Entity'}, 422
 
 
 class Login(Resource):
@@ -61,11 +101,13 @@ class Login(Resource):
         password = request.get_json()["password"]
 
         user = User.query.filter(User.username == username).first()
-        if user.authenticate(password):
-            session["user_id"] = user.id
-            return user.to_dict(), 200
+        if user:
+            if user.authenticate(password):
 
-        return make_response({"Invalid username or password"}, 404)
+                session['user_id'] = user.id
+                return user.to_dict(), 200
+
+        return {'error': '401 Unauthorized'}, 401
 
 
 class CheckSession(Resource):
@@ -74,19 +116,23 @@ class CheckSession(Resource):
 
         if user:
             return user.to_dict(), 200
-        return make_response([" Please Log in"])
+        return make_response([" Please Log in"], 401)
 
 
 class Logout(Resource):
     def delete(self):
-        session["user_id"] = None
 
-        return make_response(["Successfully logged out"], 200)
+        if session["user_id"]:
+            session["user_id"] = None
+            return make_response(["Successfully logged out"], 204)
+        else:
+            return {'error': '401 Unauthorized'}, 401
 
 
 class RecipeIndex(Resource):
     def get(self):
-        recipes = [recipe.to_dict() for recipe in Recipe.query.all()]
+        user = User.query.filter(User.id == session["user_id"]).first()
+        recipes = [recipe.to_dict() for recipe in user.recipes]
 
         return recipes, 200
 
@@ -99,10 +145,15 @@ class RecipeIndex(Resource):
             user_id=session["user_id"]
         )
 
-        db.session.add(new_recipe)
-        db.session.commit()
+        try:
+            db.session.add(new_recipe)
+            db.session.commit()
 
-        return new_recipe.to_dict(), 200
+            return new_recipe.to_dict(), 200
+
+        except IntegrityError:
+
+            return {'error': '422 Unprocessable Entity'}, 422
 
 
 class RecipeById(Resource):
@@ -135,7 +186,8 @@ def check_if_logged_in():
         "signup",
         "check_session",
         "login",
-        "logout"
+        "logout",
+        "individual_users"
 
     ]
 
